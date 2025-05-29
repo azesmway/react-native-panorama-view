@@ -129,5 +129,6 @@ afterEvaluate { project ->
                 url uri("file://${projectDir}/../android/maven")
                 // configureReactNativePom pom
             }
+        }
     }
 }
