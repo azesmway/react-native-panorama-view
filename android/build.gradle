@@ -12,7 +12,7 @@ buildscript {
 }
 
 apply plugin: 'com.android.library'
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
 
 def safeExtGet(prop, fallback) {
     rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
@@ -20,10 +20,10 @@ def safeExtGet(prop, fallback) {
 
 // Matches values in recent template from React Native (0.59)
 // https://github.com/facebook/react-native/blob/0.59-stable/template/android/build.gradle#L5-L9
-def DEFAULT_COMPILE_SDK_VERSION = 28
-def DEFAULT_BUILD_TOOLS_VERSION = "28.0.3"
-def DEFAULT_MIN_SDK_VERSION = 19
-def DEFAULT_TARGET_SDK_VERSION = 28
+def DEFAULT_COMPILE_SDK_VERSION = 34
+def DEFAULT_BUILD_TOOLS_VERSION = "34.0.0"
+def DEFAULT_MIN_SDK_VERSION = 26
+def DEFAULT_TARGET_SDK_VERSION = 34
 
 android {
   compileSdkVersion safeExtGet('compileSdkVersion', DEFAULT_COMPILE_SDK_VERSION)
@@ -54,10 +54,10 @@ dependencies {
     implementation 'com.facebook.react:react-native:+'
     // Panorama
     implementation "androidx.annotation:annotation:1.1.0"
-    implementation 'com.google.vr:sdk-base:1.180.0'
-    implementation 'com.google.vr:sdk-common:1.180.0'
-    implementation 'com.google.vr:sdk-commonwidget:1.180.0'
-    implementation 'com.google.vr:sdk-panowidget:1.180.0'
+    implementation(name: 'sdk-base-1.180.0', ext:'aar')
+    implementation(name: 'sdk-common-1.180.0', ext:'aar')
+    implementation(name: 'sdk-commonwidget-1.180.0', ext:'aar')
+    implementation(name: 'sdk-panowidget-1.180.0', ext:'aar')
     implementation 'commons-io:commons-io:2.5'
 }
 
@@ -95,17 +95,14 @@ afterEvaluate { project ->
     task androidJavadoc(type: Javadoc) {
         source = android.sourceSets.main.java.srcDirs
         classpath += files(android.bootClasspath)
-        classpath += files(project.getConfigurations().getByName('compile').asList())
         include '**/*.java'
     }
 
     task androidJavadocJar(type: Jar, dependsOn: androidJavadoc) {
-        classifier = 'javadoc'
         from androidJavadoc.destinationDir
     }
 
     task androidSourcesJar(type: Jar) {
-        classifier = 'sources'
         from android.sourceSets.main.java.srcDirs
         include '**/*.java'
     }
@@ -126,10 +123,11 @@ afterEvaluate { project ->
 
     task installArchives(type: Upload) {
         configuration = configurations.archives
-        repositories.mavenDeployer {
-            // Deploy to react-native-event-bridge/maven, ready to publish to npm
-            repository url: "file://${projectDir}/../android/maven"
-            configureReactNativePom pom
-        }
+        repositories {
+            maven {
+                // Deploy to react-native-event-bridge/maven, ready to publish to npm
+                url uri("file://${projectDir}/../android/maven")
+                // configureReactNativePom pom
+            }
     }
 }
